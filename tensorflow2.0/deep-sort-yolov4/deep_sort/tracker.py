@@ -42,10 +42,11 @@ class Tracker:
         self.max_iou_distance = max_iou_distance
         self.max_age = max_age
         self.n_init = n_init
-
+        self.max_age = 10000
         self.kf = kalman_filter.KalmanFilter()
         self.tracks = []
         self._next_id = 1
+        
 
     def predict(self):
         """Propagate track state distributions one time step forward.
@@ -93,13 +94,15 @@ class Tracker:
     def _match(self, detections):
 
         def gated_metric(tracks, dets, track_indices, detection_indices):
-            features = np.array([dets[i].feature for i in detection_indices])
+            features = np.array([dets[i].feature for i in detection_indices]) # features from bounding boxes
             targets = np.array([tracks[i].track_id for i in track_indices])
+            #print(features, 'featurs from here', features.shape)
             cost_matrix = self.metric.distance(features, targets)
-            cost_matrix = linear_assignment.gate_cost_matrix(
+            print(cost_matrix, 'cost_matrix from trakcer')
+            cost_matrix = linear_assignment.gate_cost_matrix(  # cost of neural net
                 self.kf, cost_matrix, tracks, dets, track_indices,
                 detection_indices)
-
+         
             return cost_matrix
 
         # Split track set into confirmed and unconfirmed tracks.
@@ -136,3 +139,4 @@ class Tracker:
             mean, covariance, self._next_id, self.n_init, self.max_age,
             detection.feature))
         self._next_id += 1
+

@@ -76,6 +76,7 @@ def min_cost_matching(
             unmatched_detections.append(detection_idx)
         else:
             matches.append((track_idx, detection_idx))
+    
     return matches, unmatched_tracks, unmatched_detections
 
 
@@ -182,13 +183,21 @@ def gate_cost_matrix(
         Returns the modified cost matrix.
 
     """
+    thresh = 0.3
     gating_dim = 2 if only_position else 4
     gating_threshold = kalman_filter.chi2inv95[gating_dim]
     measurements = np.asarray(
-        [detections[i].to_xyah() for i in detection_indices])
+        [detections[i].to_xyah() for i in detection_indices])   
+    col_length = len(cost_matrix[0])
     for row, track_idx in enumerate(track_indices):
         track = tracks[track_idx]
-        gating_distance = kf.gating_distance(
+        
+        gating_distance = kf.gating_distance( ##distance of kallman filter
             track.mean, track.covariance, measurements, only_position)
+        for i in range(col_length):
+             if cost_matrix[row][i] < thresh:
+                 gating_distance[i] = 10**(-2)
         cost_matrix[row, gating_distance > gating_threshold] = gated_cost
+        
+    print(cost_matrix, cost_matrix.shape, 'cost_matrix from linear assignments')
     return cost_matrix
