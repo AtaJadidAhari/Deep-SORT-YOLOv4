@@ -79,6 +79,7 @@ class Track:
 
         self._n_init = n_init
         self._max_age = max_age
+        self.class_name = ""
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
@@ -96,7 +97,7 @@ class Track:
         return ret
 
     def to_tlbr(self):
-        """Get current position in bounding box format `(min x, miny, max x,
+        """Get current position in bounding box format `(min x, min y, max x,
         max y)`.
 
         Returns
@@ -143,6 +144,7 @@ class Track:
         self.time_since_update = 0
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
+        self.class_name = detection.cls
 
     def mark_missed(self):
         """Mark this track as missed (no association at the current time step).
@@ -164,3 +166,4 @@ class Track:
     def is_deleted(self):
         """Returns True if this track is dead and should be deleted."""
         return self.state == TrackState.Deleted
+
